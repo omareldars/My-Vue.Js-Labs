@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Book Shop</title>
+    <link rel="stylesheet" href="css/bootstrap.css">
+    <link rel="stylesheet" href="css/fontawesome.css">
+
+    <link rel="stylesheet" href="vue.js">
+
+    <style>
+        body{
+            padding-top: 10px;
+        }
+        .more{
+            color: green;
+            font-weight: bold;
+        }
+        .less{
+            color: orange;
+            font-weight: bold;
+        }
+        .none{
+            color: red;
+            font-weight: bold;
+        }
+        .card{
+            box-shadow: 2px 2px 2px lightgray;
+            background: -webkit-linear-gradient(top,white 70%,lightgrey);
+        }
+        .card-hover{
+            background: -webkit-linear-gradient(top,grey -70%,white);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="maindiv">
+        <div class="row bg-dark text-light justify-content-between p-2 align-items-baseline">
+            <a href="#" @click.prevent="iscartvisible=false,iswishlistvisible=false" style="color: aqua;text-decoration: none;">Books</a>
+            <div class="d-flex align-items-baseline">
+                <p class="mx-2"><span v-text="wishlist.wishitem.length"></span> <template v-if="wishlist.wishitem.length==0 || wishlist.wishitem.length>1">Books</template><template v-if="wishlist.wishitem.length==1">Book</template> in your Book WishList</p>
+                <button class="btn btn-success" @click.prevent="iswishlistvisible=true,iscartvisible=false">My WishList</button>
+            </div>
+            <div class="d-flex align-items-baseline">
+                <p class="mx-2"><span v-text="cart.cartitem.length"></span> <template v-if="cart.cartitem.length==0 || cart.cartitem.length>1"> Books</template><template v-if="cart.cartitem.length==1"> Book</template>in your Cart with total Price <span>{{currencyformater(gettotalprice)}}</span></p>
+                <button class="btn btn-primary" @click.prevent="iscartvisible=true,iswishlistvisible=false">My Cart</button>
+            </div>
+        </div> <!--navbar-->
+
+        <div class="row justify-content-center" v-if="iscartvisible==false && iswishlistvisible==false">
+            <div class="card" style="width:23em;margin:0.2em;box-shadow: 2px 2px 2px gray; " v-for="book in books">
+                <img :src="book.Image"/ class="card-img-top ">
+                <div class="card-body">
+                    <!-- <div class="row text-center"  > -->
+                        <ul class="list-group list-group-flush list-unstyled">
+                            <li class="list-group-item">Category: {{book.Category}}</li>
+                            <li class="list-group-item">Author: {{book.Author}}</li>
+                            <li class="list-group-item">Pages: {{book.Pages}}</li>
+                            <li class="list-group-item">Price: {{currencyformater(book.Price)}}</li>
+                            <li class="list-group-item" :class="book.Quantity>5?'more':'',book.Quantity<5?'less':'',book.Quantity==0?'none':''">In Stock: {{book.Quantity}}</li>
+                            <li class="d-flex justify-content-between align-items-center">
+                                <button class="btn btn-success d-inline-block" @click.prevent="addtowish(book)">Add to WishList</button>
+                                <button class="btn btn-primary d-inline-block" :disabled="book.Quantity==0" @click.prevent="addtocart(book)">Add to Cart</button>
+                            </li>
+                          </ul>
+                        <!-- <h6 class="w-50 bg-">Category: {{book.Category}}</h6>
+                        <h6 class="w-50">Author: {{book.Author}}</h6>
+                        <h6 class="w-50 mt-2">Pages: {{book.Pages}}</h6>
+                        <h6 class="w-50 mt-2">Price: {{book.Price}}</h6> -->
+                    <!-- </div> -->
+                </div>
+            </div>
+        </div> <!-- //End of Books -->
+
+        <div class="row" v-if="iscartvisible==true">
+            <h1 class="text-danger text-center mt-5 w-100" v-if="cart.cartitem.length==0">Sorry Your Cart Is Empty</h1>
+            <table class="table table-striped text-center" v-if="cart.cartitem.length>0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Add | Remove</th>
+                        <th>Total Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in cart.cartitem">
+                        <td>{{item.book.ISBN}}</td>
+                        <td>{{item.book.Name}}</td>
+                        <td>{{currencyformater(item.book.Price)}}</td>
+                        <td>{{item.Quantity}}</td>
+                        <td><button class="btn btn-success" @click.prevent="cartincreasequantity(item)" :disabled="item.book.Quantity==0">+</button> <button class="btn btn-danger" @click.prevent="cartdecreasequantity(item)">-</button></td>
+                        <td>{{currencyformater(item.book.Price*item.Quantity)}}</td>
+                    </tr>
+                    <tr>
+                        <th colspan="4">
+                            Total
+                        </th>
+                        <th colspan="2">{{currencyformater(gettotalprice)}}</th>
+                    </tr>
+                    <tr>
+                        <th colspan="4">
+                            Taxes
+                        </th>
+                        <th colspan="2">{{currencyformater(gettotalprice*0.1)}}</th>
+                    </tr>
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th colspan="4">Grand Total</th>
+                        <th colspan="2">{{currencyformater((gettotalprice*0.1)+gettotalprice)}}</th>
+                    </tr>
+                </tfoot>
+            </table>
+
+            
+        </div> <!--// End of Cart-->
+
+
+        <div class="row" v-if="iswishlistvisible==true">
+            <h1 class="text-danger text-center mt-5 w-100" v-if="wishlist.wishitem.length==0">Sorry Your WishList is Empty</h1>
+            <table class="table table-striped text-center" v-if="wishlist.wishitem.length>0">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Price</th>
+                        <th>Quantity</th>
+                        <th>Author</th>
+                        <th>Category</th>
+                        <th>Add | Remove</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in wishlist.wishitem">
+                        <td>{{item.book.ISBN}}</td>
+                        <td>{{item.book.Name}}</td>
+                        <td>{{item.book.Price}}</td>
+                        <td>{{item.Quantity}}</td>
+                        <td>{{item.book.Author}}</td>
+                        <td>{{item.book.Category}}</td>
+                        <td><button class="btn btn-success" @click.prevent="wishincreasequantity(item)">+</button> <button class="btn btn-danger" @click.prevent="wishdecreasequantity(item)">-</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div> <!--// End of WishList-->
+
+    </div> <!-- //container -->
+
+
+
+
+
+    <script src="js/JQUERY.js"></script>
+    <!-- <script src="https://unpkg.com/@popperjs/core@2"></script> -->
+    <script src="vue.js"></script>
+    <script src="books.js"></script>
+    
+    <script>
+        const myapp = Vue.createApp({
+            data:()=>({
+                books:books,
+                iscartvisible:false,
+                iswishlistvisible:false,
+                // isbooksvisible:true,
+                cart:{
+                    cartitem:[]
+                },
+                wishlist:{
+                    wishitem:[]
+                }
+            }),
+            methods:{
+                currencyformater(value){
+                    let formatter = Intl.NumberFormat("en-US",{
+                        style:'currency',
+                        currency:'USD',
+                        minimumFractionDigits:2
+                    });
+                    return formatter.format(value);
+                },
+                addtocart(book){
+                    if(!this.checkexistance(book))
+                    {
+                        this.cart.cartitem.push({
+                        book:book,
+                        Quantity:1
+                    });
+                    }
+                    else{
+                        let targetbook;
+                        for(let i=0;i<this.cart.cartitem.length;i++){
+                            if(this.cart.cartitem[i].book.ISBN==book.ISBN)
+                            {
+                                targetbook = this.cart.cartitem[i];
+                                break;
+                            }
+                        }
+                        targetbook.Quantity++;
+                    }
+                    book.Quantity--;
+
+                },
+                checkexistance(book){
+                    for(let i=0;i<this.cart.cartitem.length;i++)
+                    {
+                        if(this.cart.cartitem[i].book.ISBN==book.ISBN){
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                ,
+                wishcheckexistance(book){
+                    for(let i=0;i<this.wishlist.wishitem.length;i++)
+                    {
+                        if(this.wishlist.wishitem[i].book.ISBN==book.ISBN){
+                            return true;
+                        }
+                    }
+                    return false;
+                }
+                ,
+                addtowish(book){
+                    if(!this.wishcheckexistance(book))
+                    {
+                        this.wishlist.wishitem.push({
+                        book:book,
+                        Quantity:1
+                    });
+                    }
+                    else{
+                        let targetbook;
+                        for(let i=0;i<this.wishlist.wishitem.length;i++){
+                            if(this.wishlist.wishitem[i].book.ISBN==book.ISBN)
+                            {
+                                targetbook = this.wishlist.wishitem[i];
+                                break;
+                            }
+                        }
+                        targetbook.Quantity++;
+                    }
+                },
+                cartincreasequantity(item){
+                    item.Quantity++;
+                    item.book.Quantity--;
+                }
+                ,
+                cartdecreasequantity(item){
+                    item.Quantity--;
+                    if (item.Quantity==0) {
+                        let itemindex;
+                        for(let i=0;i<this.cart.cartitem.length;i++)
+                        {
+                            if(this.cart.cartitem[i].book.ISBN==item.book.ISBN){
+                                itemindex =i;
+                                break;
+                            }
+                        }
+                        this.cart.cartitem.splice(itemindex,1);
+                            
+                    } 
+                    item.book.Quantity++;
+                    
+                },
+                wishincreasequantity(item){
+                    item.Quantity++;
+                }
+                ,
+                wishdecreasequantity(item){
+                    item.Quantity--;
+                    if (item.Quantity==0) {
+                        let itemindex;
+                        for(let i=0;i<this.wishlist.wishitem.length;i++)
+                        {
+                            if(this.wishlist.wishitem[i].book.ISBN==item.book.ISBN){
+                                itemindex =i;
+                                break;
+                            }
+                        }
+                        this.wishlist.wishitem.splice(itemindex,1);
+                            
+                    }  
+                },
+
+            },
+            computed:{
+                gettotalprice(){
+                    let res=0;
+                    for(let i=0;i<this.cart.cartitem.length;i++)
+                    {
+                        res+= this.cart.cartitem[i].book.Price*this.cart.cartitem[i].Quantity;
+                    }
+                    return res;
+                }
+            }
+
+        });
+        myapp.mount('#maindiv');
+    </script>
+</body>
+</html>
