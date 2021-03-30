@@ -41,14 +41,16 @@
         <div class="row bg-dark text-light justify-content-between p-2 align-items-baseline">
             <a href="#" @click.prevent="iscartvisible=false,iswishlistvisible=false" style="color: aqua;text-decoration: none;">Books</a>
             <div class="d-flex align-items-baseline">
-                <p class="mx-2"><span v-text="wishlist.wishitem.length"></span> <template v-if="wishlist.wishitem.length==0 || wishlist.wishitem.length>1">Books</template><template v-if="wishlist.wishitem.length==1">Book</template> in your Book WishList</p>
-                <button class="btn btn-success" @click.prevent="iswishlistvisible=true,iscartvisible=false">My WishList</button>
-            </div>
-            <div class="d-flex align-items-baseline">
                 <p class="mx-2"><span v-text="cart.cartitem.length"></span> <template v-if="cart.cartitem.length==0 || cart.cartitem.length>1"> Books</template><template v-if="cart.cartitem.length==1"> Book</template>in your Cart with total Price <span>{{currencyformater(gettotalprice)}}</span></p>
                 <button class="btn btn-primary" @click.prevent="iscartvisible=true,iswishlistvisible=false">My Cart</button>
             </div>
         </div> <!--navbar-->
+        <div class="row bg-dark text-light justify-content-end p-2 align-items-end">
+            <div class="d-flex align-items-end">
+                <p class="mx-2"><span v-text="wishlist.wishitem.length"></span> <template v-if="wishlist.wishitem.length==0 || wishlist.wishitem.length>1">Books</template><template v-if="wishlist.wishitem.length==1">Book</template> in your Book WishList</p>
+                <button class="btn btn-success" @click.prevent="iswishlistvisible=true,iscartvisible=false">My WishList</button>
+            </div>
+        </div>
 
         <div class="row justify-content-center" v-if="iscartvisible==false && iswishlistvisible==false">
             <div class="card" style="width:23em;margin:0.2em;box-shadow: 2px 2px 2px gray; " v-for="book in books">
